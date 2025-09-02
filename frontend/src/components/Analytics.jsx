@@ -20,7 +20,8 @@ const Analytics = () => {
   const [analyticsData, setAnalyticsData] = useState({
     totalReceipts: 0,
     categoryBreakdown: [],
-    monthlyTrends: []
+    monthlyTrends: [],
+    total_amount: 0
   });
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('12months');
@@ -33,9 +34,21 @@ const Analytics = () => {
     try {
       setLoading(true);
       const response = await analyticsAPI.getSummary();
-      setAnalyticsData(response.data);
+      setAnalyticsData({
+        totalReceipts: response.data.total_receipts || 0,
+        categoryBreakdown: response.data.category_breakdown || [],
+        monthlyTrends: response.data.monthly_trends || [],
+        total_amount: response.data.total_amount || 0
+      });
     } catch (error) {
       console.error('Failed to load analytics:', error);
+      // Set defaults on error
+      setAnalyticsData({
+        totalReceipts: 0,
+        categoryBreakdown: [],
+        monthlyTrends: [],
+        total_amount: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -65,17 +78,17 @@ const Analytics = () => {
     return colors[category] || colors.other;
   };
 
-  const totalSpent = analyticsData.categoryBreakdown.reduce(
+  const totalSpent = (analyticsData.categoryBreakdown || []).reduce(
     (sum, category) => sum + (category.total_amount || 0), 
     0
   );
 
-  const monthlyAverage = analyticsData.monthlyTrends.length > 0 
-    ? analyticsData.monthlyTrends.reduce((sum, month) => sum + (month.total_amount || 0), 0) / analyticsData.monthlyTrends.length
+  const monthlyAverage = (analyticsData.monthlyTrends || []).length > 0 
+    ? (analyticsData.monthlyTrends || []).reduce((sum, month) => sum + (month.total_amount || 0), 0) / analyticsData.monthlyTrends.length
     : 0;
 
-  const topCategory = analyticsData.categoryBreakdown.length > 0 
-    ? analyticsData.categoryBreakdown.reduce((prev, current) => 
+  const topCategory = (analyticsData.categoryBreakdown || []).length > 0 
+    ? (analyticsData.categoryBreakdown || []).reduce((prev, current) => 
         (prev.total_amount > current.total_amount) ? prev : current
       )
     : null;
@@ -214,7 +227,7 @@ const Analytics = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analyticsData.categoryBreakdown.map((category, index) => {
+              {(analyticsData.categoryBreakdown || []).map((category, index) => {
                 const percentage = totalSpent > 0 ? (category.total_amount / totalSpent) * 100 : 0;
                 return (
                   <div key={category._id || index} className="space-y-2">
@@ -249,7 +262,7 @@ const Analytics = () => {
                 );
               })}
               
-              {analyticsData.categoryBreakdown.length === 0 && (
+              {(analyticsData.categoryBreakdown || []).length === 0 && (
                 <div className="text-center py-8">
                   <PieChart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500">No expense data available</p>
@@ -270,8 +283,8 @@ const Analytics = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analyticsData.monthlyTrends.map((month, index) => {
-                const maxAmount = Math.max(...analyticsData.monthlyTrends.map(m => m.total_amount || 0));
+              {(analyticsData.monthlyTrends || []).map((month, index) => {
+                const maxAmount = Math.max(...(analyticsData.monthlyTrends || []).map(m => m.total_amount || 0));
                 const width = maxAmount > 0 ? (month.total_amount / maxAmount) * 100 : 0;
                 
                 return (
@@ -299,7 +312,7 @@ const Analytics = () => {
                 );
               })}
               
-              {analyticsData.monthlyTrends.length === 0 && (
+              {(analyticsData.monthlyTrends || []).length === 0 && (
                 <div className="text-center py-8">
                   <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500">No trend data available</p>
@@ -322,16 +335,12 @@ const Analytics = () => {
               <h4 className="font-semibold text-blue-900 mb-2">Spending Pattern</h4>
               <p className="text-sm text-blue-700">
                 Your highest spending month was{' '}
-                {analyticsData.monthlyTrends.length > 0 && 
-                  analyticsData.monthlyTrends.reduce((prev, current) => 
+                {(analyticsData.monthlyTrends || []).length > 0 && (() => {
+                  const highestMonth = (analyticsData.monthlyTrends || []).reduce((prev, current) => 
                     (prev.total_amount > current.total_amount) ? prev : current
-                  )._id && 
-                  `${analyticsData.monthlyTrends.reduce((prev, current) => 
-                    (prev.total_amount > current.total_amount) ? prev : current
-                  )._id.month}/${analyticsData.monthlyTrends.reduce((prev, current) => 
-                    (prev.total_amount > current.total_amount) ? prev : current
-                  )._id.year}`
-                }
+                  );
+                  return highestMonth._id ? `${highestMonth._id.month}/${highestMonth._id.year}` : 'Unknown';
+                })()}
               </p>
             </div>
             

@@ -2,63 +2,72 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Development Commands
+## Receiptor AI - Simplified Receipt Management System
 
-### Backend (FastAPI)
+### Development Commands
+
+#### Backend (FastAPI)
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn server:app --reload
+python3 server.py
+# OR
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-### Frontend (React)
+#### Frontend (React)
 ```bash
 cd frontend
 bun install
 bun start
 ```
 
-### Testing
+#### Testing
 ```bash
-python backend/test_api.py
-```
-
-### Code Quality
-```bash
-# Backend linting and formatting
+# Test backend functionality
 cd backend
-black .
-isort .
-flake8 .
-mypy .
+python3 -c "import server; print('Backend OK')"
 
-# Frontend testing
+# Test frontend build
 cd frontend
-bun test
+bun run build
 ```
 
 ## Architecture Overview
 
-### Backend Structure
-- **FastAPI** application with AsyncIOMotorClient for MongoDB
-- **Authentication**: JWT tokens with bcrypt password hashing
-- **API Pattern**: All routes under `/api` prefix using APIRouter
-- **Environment**: Requires `.env` with `MONGO_URL`, `DB_NAME`, `JWT_SECRET_KEY`
-- **CORS**: Configured for all origins in development
+### Simplified Backend
+- **FastAPI** with minimal dependencies (no database required)
+- **In-memory storage** for development and testing
+- **Mock AI processing** for receipt data extraction
+- **CORS enabled** for frontend integration
+- **File upload support** with multipart form handling
 
 ### Frontend Structure
 - **React 19** with React Router v7
 - **UI Framework**: shadcn/ui components built on Radix UI
-- **Styling**: Tailwind CSS with custom configuration via craco
-- **API Communication**: Axios with `REACT_APP_API_URL` (defaults to http://localhost:8000)
-- **Components**: Located in `/src/components/ui/` with consistent import pattern `@/components/ui/`
+- **Styling**: Tailwind CSS with custom configuration
+- **File Upload**: React Dropzone for drag-and-drop receipt uploads
+- **API Communication**: Axios for backend requests
 
-### Database
-- **MongoDB** with collections: users, items, status_checks
-- **Connection**: AsyncIOMotorClient with environment-based configuration
+### Key Features
+- **Receipt Upload**: Drag-and-drop interface for uploading receipt images/PDFs
+- **Mock AI Processing**: Simulates intelligent data extraction from receipts
+- **Category Management**: Automatic categorization of business expenses
+- **Receipt Management**: View, edit, and delete uploaded receipts
+- **Analytics**: Basic spending analysis and category breakdowns
+- **Responsive Design**: Works on desktop and mobile devices
 
-### Development Patterns
-- Backend models use Pydantic with automatic UUID generation and datetime fields
-- Frontend components follow React functional pattern with hooks
-- API responses follow consistent JSON structure
-- Authentication handled via JWT tokens in request headers
+### API Endpoints
+- `POST /api/receipts/upload` - Upload and process receipts
+- `GET /api/receipts` - List all receipts with optional filtering
+- `GET /api/receipts/{id}` - Get specific receipt details
+- `PUT /api/receipts/{id}` - Update receipt information
+- `DELETE /api/receipts/{id}` - Delete a receipt
+- `GET /api/analytics/summary` - Get spending analytics
+- `GET /api/categories` - Get available expense categories
+
+### Data Structure
+- **Receipt**: ID, filename, extracted data, category, confidence score
+- **Extracted Data**: Vendor name, amount, tax, date, description, receipt number
+- **Categories**: 11 predefined business expense categories
+- **In-memory storage**: No database setup required for development

@@ -74,22 +74,10 @@ export const analyticsAPI = {
   },
 };
 
-// AI Rules API
-export const aiRulesAPI = {
+// Categories API
+export const categoriesAPI = {
   getAll: async () => {
-    return apiClient.get('/ai-rules');
-  },
-
-  create: async (data) => {
-    return apiClient.post('/ai-rules', data);
-  },
-
-  update: async (id, data) => {
-    return apiClient.put(`/ai-rules/${id}`, data);
-  },
-
-  delete: async (id) => {
-    return apiClient.delete(`/ai-rules/${id}`);
+    return apiClient.get('/categories');
   },
 };
 

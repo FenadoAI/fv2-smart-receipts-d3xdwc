@@ -10,7 +10,32 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime
-import aiofiles
+try:
+    import aiofiles
+except ImportError:
+    # Mock aiofiles for testing without full dependencies
+    class MockAiofiles:
+        @staticmethod
+        async def open(file_path, mode='rb'):
+            class MockFile:
+                def __init__(self, path, mode):
+                    self.path = path
+                    self.mode = mode
+                
+                async def write(self, data):
+                    with open(self.path, self.mode) as f:
+                        f.write(data)
+                
+                async def __aenter__(self):
+                    return self
+                
+                async def __aexit__(self, *args):
+                    pass
+            
+            return MockFile(file_path, mode)
+    
+    aiofiles = MockAiofiles()
+
 import json
 from enum import Enum
 
@@ -163,14 +188,17 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # Import AI service (use mock for testing)
 try:
     from ai_service import ai_processor
+    ai_service_type = "full"
 except ImportError:
     from ai_service_mock import ai_processor
-    logger.warning("Using mock AI service - install dependencies for full functionality")
+    ai_service_type = "mock"
+
 try:
     from integrations import integration_manager
+    integration_type = "full"
 except ImportError:
     from integrations_mock import integration_manager
-    logger.warning("Using mock integrations - install dependencies for full functionality")
+    integration_type = "mock"
 from ai_rules_engine import get_rules_engine
 from compliance import (
     get_audit_logger, 

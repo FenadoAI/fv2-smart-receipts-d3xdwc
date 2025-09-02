@@ -39,6 +39,16 @@ except ImportError:
 import json
 from enum import Enum
 
+# Mock aiofiles for environments without it
+try:
+    import aiofiles
+except ImportError:
+    class MockAiofiles:
+        @staticmethod
+        def open(file_path, mode):
+            return open(file_path, mode.replace('b', ''))
+    aiofiles = MockAiofiles()
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

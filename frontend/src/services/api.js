@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8002';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8001';
 const API = `${API_BASE}/api`;
 
 // Create axios instance with default config
@@ -14,10 +14,16 @@ const apiClient = axios.create({
 // Add request interceptor to include auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    let token = localStorage.getItem('authToken');
+    
+    // For testing - use default token if none set
+    if (!token) {
+      token = 'test-token';
+      // Set it in localStorage for convenience
+      localStorage.setItem('authToken', token);
     }
+    
+    config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => {
